@@ -5,7 +5,7 @@ import discord
 from discord.ext import commands
 from typing_extensions import TypeVar
 
-from .view import PaginatorView
+from .view import View
 
 
 __all__ = [
@@ -22,8 +22,8 @@ ContextT = TypeVar(
 )
 ViewT = TypeVar(
     "ViewT",
-    bound=PaginatorView,
-    default=PaginatorView,
+    bound=View,
+    default=View,
 )
 
 ViewCheck: TypeAlias = Callable[[discord.Interaction, ContextT], Awaitable[bool]]

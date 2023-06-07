@@ -6,7 +6,7 @@ from typing import Any
 import discord
 
 from .enums import StopAction
-from .view import PaginatorView
+from .view import View
 from .types import ContextT, ViewT, ViewCheck
 
 
@@ -18,7 +18,6 @@ class Paginator(abc.ABC):
     def __init__(
         self,
         *,
-        # paginator
         ctx: ContextT,
         # pages
         items: Sequence[Any],
@@ -26,40 +25,51 @@ class Paginator(abc.ABC):
         join_items: bool = True,
         join_items_with: str = "\n",
         initial_page: int = 0,
+        # stop actions
+        timeout_action: StopAction = StopAction.DISABLE_VIEW,
+        stop_button_action: StopAction = StopAction.REMOVE_VIEW,
         # view
-        view: type[ViewT] = PaginatorView,
+        view: type[ViewT] = View,
         view_timeout: int = 300,
-        view_check: ViewCheck | None = None
+        view_check: ViewCheck | None = None,
     ) -> None:
-        # paginator
         self.ctx: ContextT = ctx
+
         # pages
         if join_items is True:
             self.pages: Sequence[Any] = [
-                join_items_with.join(items[chunk:chunk + items_per_page])
-                for chunk in range(0, len(items), items_per_page)
+                join_items_with.join(items[x:x + items_per_page])
+                for x in range(0, len(items), items_per_page)
             ]
         else:
             self.pages: Sequence[Any] = [
-                items[chunk:chunk + items_per_page]
-                for chunk in range(0, len(items), items_per_page)
+                items[x:x + items_per_page]
+                for x in range(0, len(items), items_per_page)
             ]
         self.page: int = initial_page
+
+        # stop actions
+        self.timeout_action: StopAction = timeout_action
+        self.stop_button_action: StopAction = stop_button_action
+
         # message
         self._view_cls: type[ViewT] = view
-        self._view_timeout: int = view_timeout
-        self._view_check: ViewCheck | None = view_check
+        self.view_timeout: int = view_timeout
+        self.view_check: ViewCheck | None = view_check
+
         # message
         self.message: discord.Message | None = None
-        self.view: PaginatorView | None = None
+        self.view: ViewT = discord.utils.MISSING
         self.content: str = discord.utils.MISSING
         self.embeds: list[discord.Embed] = discord.utils.MISSING
+
+    # methods
 
     async def start(self) -> None:
         if self.message is not None:
             return
         # set initial states
-        self.view = self._view_cls(timeout=self._view_timeout)
+        self.view = self._view_cls(self)
         self.view._update_button_states()
         await self._update_page_content()
         # send initial message
@@ -85,11 +95,11 @@ class Paginator(abc.ABC):
             )
 
     async def stop(self, by_timeout: bool = False) -> None:
-        if not self.message:
+        if self.message is None:
             return
         # enact stop actions
         with contextlib.suppress(discord.NotFound, discord.HTTPException):
-            match self.timeout_action if by_timeout else self.stop_action:
+            match self.timeout_action if by_timeout else self.stop_button_action:
                 case StopAction.DISABLE_VIEW:
                     for button in self.view.buttons.values():
                         button.disabled = True
@@ -108,6 +118,22 @@ class Paginator(abc.ABC):
         self.message = None
         self.view.stop()
         self.view = discord.utils.MISSING
+
+    # shortcuts
+
+    async def go_to_first_page(self) -> None:
+        await self.change_page(0)
+
+    async def go_to_previous_page(self) -> None:
+        await self.change_page(self.page - 1)
+
+    async def go_to_next_page(self) -> None:
+        await self.change_page(self.page + 1)
+
+    async def go_to_last_page(self) -> None:
+        await self.change_page(len(self.pages) - 1)
+
+    # abc methods
 
     @abc.abstractmethod
     async def _update_page_content(self) -> None:
