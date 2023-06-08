@@ -6,8 +6,8 @@ from typing import Any
 import discord
 
 from .enums import StopAction
-from .view import View
-from .types import ContextT, ViewT, ViewCheck
+from .view import View, VIEW_BUTTONS
+from .types import ContextT, ViewCheck, ViewButtons
 
 
 __all__ = ["Paginator"]
@@ -29,9 +29,9 @@ class Paginator(abc.ABC):
         timeout_action: StopAction = StopAction.DISABLE_VIEW,
         stop_button_action: StopAction = StopAction.REMOVE_VIEW,
         # view
-        view: type[ViewT] = View,
         view_timeout: int = 300,
         view_check: ViewCheck | None = None,
+        view_buttons: ViewButtons = VIEW_BUTTONS
     ) -> None:
         self.ctx: ContextT = ctx
 
@@ -53,13 +53,13 @@ class Paginator(abc.ABC):
         self.stop_button_action: StopAction = stop_button_action
 
         # message
-        self._view_cls: type[ViewT] = view
         self.view_timeout: int = view_timeout
         self.view_check: ViewCheck | None = view_check
+        self.view_buttons: ViewButtons = view_buttons
 
         # message
         self.message: discord.Message | None = None
-        self.view: ViewT = discord.utils.MISSING
+        self.view: View = discord.utils.MISSING
         self.content: str = discord.utils.MISSING
         self.embeds: list[discord.Embed] = discord.utils.MISSING
 
@@ -69,7 +69,7 @@ class Paginator(abc.ABC):
         if self.message is not None:
             return
         # set initial states
-        self.view = self._view_cls(self)
+        self.view = View(self)
         self.view._update_button_states()
         await self._update_page_content()
         # send initial message

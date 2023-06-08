@@ -6,10 +6,18 @@ import discord
 
 if TYPE_CHECKING:
     from .base import Paginator
+    from .types import ViewButtons
 
 
-__all__ = ["View"]
-
+__all__ = [
+    "FirstPageButton",
+    "PreviousPageButton",
+    "LabelButton",
+    "NextPageButton",
+    "LastPageButton",
+    "StopButton",
+    "View"
+]
 
 
 class FirstPageButton(discord.ui.Button["View"]):
@@ -57,35 +65,48 @@ class StopButton(discord.ui.Button["View"]):
         await self.view.paginator.stop()  # pyright: ignore
 
 
+VIEW_BUTTONS: ViewButtons = {
+    "first":    FirstPageButton,
+    "previous": PreviousPageButton,
+    "label":    LabelButton,
+    "next":     NextPageButton,
+    "last":     LastPageButton,
+    "stop":     StopButton
+}
+
+
 class View(discord.ui.View):
 
     def __init__(self, paginator: Paginator) -> None:
-        super().__init__(timeout=paginator.view_timeout)
+        super().__init__(
+            timeout=paginator.view_timeout
+        )
         self.paginator: Paginator = paginator
         match len(self.paginator.pages):
             case 1:
                 self.buttons = {
-                    "label": LabelButton(label="0/0"),
-                    "stop":  StopButton(emoji="\N{BLACK SQUARE FOR STOP}")
+                    "label": self.paginator.view_buttons["label"](),
+                    "stop":  self.paginator.view_buttons["stop"]()
                 }
             case 2:
                 self.buttons = {
-                    "previous": PreviousPageButton(emoji="\N{BLACK LEFT-POINTING TRIANGLE}"),
-                    "label":    LabelButton(label="0/0"),
-                    "next":     NextPageButton(emoji="\N{BLACK RIGHT-POINTING TRIANGLE}"),
-                    "stop":     StopButton(emoji="\N{BLACK SQUARE FOR STOP}")
+                    "previous": self.paginator.view_buttons["previous"](),
+                    "label":    self.paginator.view_buttons["label"](),
+                    "next":     self.paginator.view_buttons["next"](),
+                    "stop":     self.paginator.view_buttons["stop"]()
                 }
             case _:
                 self.buttons = {
-                    "first":    FirstPageButton(emoji="\N{BLACK LEFT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}"),
-                    "previous": PreviousPageButton(emoji="\N{BLACK LEFT-POINTING TRIANGLE}"),
-                    "label":    LabelButton(label="0/0"),
-                    "next":     NextPageButton(emoji="\N{BLACK RIGHT-POINTING TRIANGLE}"),
-                    "last":     LastPageButton(emoji="\N{BLACK RIGHT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}"),
-                    "stop":     StopButton(emoji="\N{BLACK SQUARE FOR STOP}")
+                    "first":    self.paginator.view_buttons["first"](),
+                    "previous": self.paginator.view_buttons["previous"](),
+                    "label":    self.paginator.view_buttons["label"](),
+                    "next":     self.paginator.view_buttons["next"](),
+                    "last":     self.paginator.view_buttons["last"](),
+                    "stop":     self.paginator.view_buttons["stop"]()
                 }
         for button in self.buttons.values():
             self.add_item(button)
+
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if self.paginator.view_check is not None:
