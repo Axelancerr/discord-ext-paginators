@@ -62,6 +62,6 @@ class TextPaginator(BasePaginator):
     async def set_page_content(self) -> None:
         self.content = f"{self.codeblock_start}" \
                        f"{self.header}\n" \
-                       f"{self.pages[self.page]}" \
+                       f"{self.pages[self.page - 1]}" \
                        f"\n{self.footer}" \
                        f"{self.codeblock_end}"

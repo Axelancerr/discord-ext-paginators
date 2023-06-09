@@ -25,7 +25,7 @@ class BasePaginator(abc.ABC):
         items_per_page: int,
         join_items: bool = True,
         join_items_with: str = "\n",
-        initial_page: int = 0,
+        initial_page: int = 1,
         # controller
         controller: type[ControllerT] = Controller,
         controller_stop_button_action: StopAction = StopAction.REMOVE_VIEW,
@@ -36,6 +36,8 @@ class BasePaginator(abc.ABC):
         # context
         self.ctx: ContextT = ctx
         # pages
+        if items_per_page <= 0:
+            raise ValueError("'items_per_page' must be greater than 0.")
         if join_items is True:
             self.pages: Sequence[Any] = [
                 join_items_with.join(items[x:x + items_per_page])
@@ -46,6 +48,8 @@ class BasePaginator(abc.ABC):
                 items[x:x + items_per_page]
                 for x in range(0, len(items), items_per_page)
             ]
+        if initial_page <= 0 or initial_page > len(self.pages):
+            raise ValueError(f"'initial_page' must be between 1 and {len(self.pages)} (inclusive).")
         self.page: int = initial_page
         # controller
         self.controller: type[ControllerT] = controller
@@ -117,7 +121,7 @@ class BasePaginator(abc.ABC):
     # shortcuts
 
     async def go_to_first_page(self) -> None:
-        await self.change_page(0)
+        await self.change_page(1)
 
     async def go_to_previous_page(self) -> None:
         await self.change_page(self.page - 1)
@@ -126,7 +130,7 @@ class BasePaginator(abc.ABC):
         await self.change_page(self.page + 1)
 
     async def go_to_last_page(self) -> None:
-        await self.change_page(len(self.pages) - 1)
+        await self.change_page(len(self.pages))
 
     # abc methods
 

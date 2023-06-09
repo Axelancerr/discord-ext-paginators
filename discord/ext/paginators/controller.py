@@ -4,9 +4,9 @@ from typing import TYPE_CHECKING
 
 import discord
 
+
 if TYPE_CHECKING:
     from .base import BasePaginator
-
 
 __all__ = ["Controller"]
 
@@ -95,8 +95,8 @@ class Controller(discord.ui.View):
         await self.paginator.stop(by_timeout=True)
 
     def set_button_states(self) -> None:
-        self.buttons["first"].disabled = self.paginator.page <= 1
-        self.buttons["previous"].disabled = self.paginator.page <= 0
-        self.buttons["label"].label = f"{self.paginator.page + 1}/{len(self.paginator.pages)}"
-        self.buttons["next"].disabled = self.paginator.page >= len(self.paginator.pages) - 1
-        self.buttons["last"].disabled = self.paginator.page >= len(self.paginator.pages) - 2
+        self.buttons["first"].disabled = self.paginator.page <= 2
+        self.buttons["previous"].disabled = self.paginator.page <= 1
+        self.buttons["label"].label = f"{self.paginator.page}/{len(self.paginator.pages)}"
+        self.buttons["next"].disabled = self.paginator.page >= len(self.paginator.pages)
+        self.buttons["last"].disabled = self.paginator.page >= len(self.paginator.pages) - 1
