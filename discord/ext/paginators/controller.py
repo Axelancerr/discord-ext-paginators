@@ -28,7 +28,10 @@ class PreviousPageButton(discord.ui.Button["Controller"]):
 
 
 class LabelButton(discord.ui.Button["Controller"]):
-    pass
+
+    async def callback(self, interaction: discord.Interaction) -> None:
+        # noinspection PyUnresolvedReferences
+        await interaction.response.defer()
 
 
 class NextPageButton(discord.ui.Button["Controller"]):
@@ -63,13 +66,13 @@ class Controller(discord.ui.View):
         match len(self.paginator.pages):
             case 1:
                 self.buttons = {
-                    "label": LabelButton(label="?", disabled=True),
+                    "label": LabelButton(label="?"),
                     "stop":  StopButton(emoji="\N{BLACK SQUARE FOR STOP}")
                 }
             case 2:
                 self.buttons = {
                     "previous": PreviousPageButton(emoji="\N{BLACK LEFT-POINTING TRIANGLE}"),
-                    "label":    LabelButton(label="?", disabled=True),
+                    "label":    LabelButton(label="?"),
                     "next":     NextPageButton(emoji="\N{BLACK RIGHT-POINTING TRIANGLE}"),
                     "stop":     StopButton(emoji="\N{BLACK SQUARE FOR STOP}")
                 }
@@ -77,7 +80,7 @@ class Controller(discord.ui.View):
                 self.buttons = {
                     "first":    FirstPageButton(emoji="\N{BLACK LEFT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}"),
                     "previous": PreviousPageButton(emoji="\N{BLACK LEFT-POINTING TRIANGLE}"),
-                    "label":    LabelButton(label="?", disabled=True),
+                    "label":    LabelButton(label="?"),
                     "next":     NextPageButton(emoji="\N{BLACK RIGHT-POINTING TRIANGLE}"),
                     "last":     LastPageButton(emoji="\N{BLACK RIGHT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}"),
                     "stop":     StopButton(emoji="\N{BLACK SQUARE FOR STOP}")
@@ -92,13 +95,8 @@ class Controller(discord.ui.View):
         await self.paginator.stop(by_timeout=True)
 
     def set_button_states(self) -> None:
-        # enable or disable the first and previous buttons
-        on_first_page = (self.paginator.page == 0)
-        self.buttons["first"].disabled = on_first_page
-        self.buttons["previous"].disabled = on_first_page
-        # update the label button to show the current page
+        self.buttons["first"].disabled = self.paginator.page <= 1
+        self.buttons["previous"].disabled = self.paginator.page <= 0
         self.buttons["label"].label = f"{self.paginator.page + 1}/{len(self.paginator.pages)}"
-        # enable or disable the next and last buttons
-        on_last_page = (self.paginator.page == len(self.paginator.pages) - 1)
-        self.buttons["next"].disabled = on_last_page
-        self.buttons["last"].disabled = on_last_page
+        self.buttons["next"].disabled = self.paginator.page >= len(self.paginator.pages) - 1
+        self.buttons["last"].disabled = self.paginator.page >= len(self.paginator.pages) - 2
