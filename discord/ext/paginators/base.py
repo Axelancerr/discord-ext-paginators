@@ -6,18 +6,19 @@ from typing import Any
 import discord
 
 from .enums import StopAction
-from .view import View, VIEW_BUTTONS
-from .types import ContextT, ViewCheck, ViewButtons
+from .controller import Controller
+from .types import ContextT, ControllerT
 
 
-__all__ = ["Paginator"]
+__all__ = ["BasePaginator"]
 
 
-class Paginator(abc.ABC):
+class BasePaginator(abc.ABC):
 
     def __init__(
         self,
         *,
+        # context
         ctx: ContextT,
         # pages
         items: Sequence[Any],
@@ -25,16 +26,15 @@ class Paginator(abc.ABC):
         join_items: bool = True,
         join_items_with: str = "\n",
         initial_page: int = 0,
-        # stop actions
+        # controller
+        controller: type[ControllerT] = Controller,
+        controller_stop_button_action: StopAction = StopAction.REMOVE_VIEW,
+        # timeout
+        timeout: float = 300.0,
         timeout_action: StopAction = StopAction.DISABLE_VIEW,
-        stop_button_action: StopAction = StopAction.REMOVE_VIEW,
-        # view
-        view_timeout: int = 300,
-        view_check: ViewCheck | None = None,
-        view_buttons: ViewButtons = VIEW_BUTTONS
     ) -> None:
+        # context
         self.ctx: ContextT = ctx
-
         # pages
         if join_items is True:
             self.pages: Sequence[Any] = [
@@ -47,19 +47,15 @@ class Paginator(abc.ABC):
                 for x in range(0, len(items), items_per_page)
             ]
         self.page: int = initial_page
-
-        # stop actions
+        # controller
+        self.controller: type[ControllerT] = controller
+        self.controller_stop_button_action: StopAction = controller_stop_button_action
+        # timeout
+        self.timeout: float = timeout
         self.timeout_action: StopAction = timeout_action
-        self.stop_button_action: StopAction = stop_button_action
-
-        # message
-        self.view_timeout: int = view_timeout
-        self.view_check: ViewCheck | None = view_check
-        self.view_buttons: ViewButtons = view_buttons
-
         # message
         self.message: discord.Message | None = None
-        self.view: View = discord.utils.MISSING
+        self.view: Controller = discord.utils.MISSING
         self.content: str = discord.utils.MISSING
         self.embeds: list[discord.Embed] = discord.utils.MISSING
 
@@ -69,9 +65,9 @@ class Paginator(abc.ABC):
         if self.message is not None:
             return
         # set initial states
-        self.view = View(self)
-        self.view._update_button_states()
-        await self._update_page_content()
+        self.view = self.controller(self)
+        self.view.set_button_states()
+        await self.set_page_content()
         # send initial message
         self.message = await self.ctx.reply(
             content=self.content,
@@ -84,8 +80,8 @@ class Paginator(abc.ABC):
             return
         # set new states
         self.page = page
-        self.view._update_button_states()
-        await self._update_page_content()
+        self.view.set_button_states()
+        await self.set_page_content()
         # edit message
         with contextlib.suppress(discord.NotFound, discord.HTTPException):
             await self.message.edit(  # type: ignore
@@ -99,7 +95,7 @@ class Paginator(abc.ABC):
             return
         # enact stop actions
         with contextlib.suppress(discord.NotFound, discord.HTTPException):
-            match self.timeout_action if by_timeout else self.stop_button_action:
+            match self.timeout_action if by_timeout else self.controller_stop_button_action:
                 case StopAction.DISABLE_VIEW:
                     for button in self.view.buttons.values():
                         button.disabled = True
@@ -108,8 +104,7 @@ class Paginator(abc.ABC):
                     await self.message.edit(view=None)
                 case StopAction.EDIT_MESSAGE:
                     await self.message.edit(  # type: ignore
-                        content="*This message has expired*",
-                        embeds=[],
+                        content="*This message has expired*", embeds=[],
                         view=None
                     )
                 case StopAction.DELETE_MESSAGE:
@@ -136,5 +131,5 @@ class Paginator(abc.ABC):
     # abc methods
 
     @abc.abstractmethod
-    async def _update_page_content(self) -> None:
+    async def set_page_content(self) -> None:
         raise NotImplementedError

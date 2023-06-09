@@ -1,17 +1,14 @@
-from collections.abc import Awaitable, Callable
-from typing import Any, TypeAlias, TypedDict
+from typing import Any
 
-import discord
 from discord.ext import commands
 from typing_extensions import TypeVar
 
-from .view import FirstPageButton, LabelButton, LastPageButton, NextPageButton, PreviousPageButton, StopButton
+from .controller import Controller
 
 
 __all__ = [
     "ContextT",
-    "ViewCheck",
-    "ViewButtons",
+    "ControllerT",
 ]
 
 
@@ -20,15 +17,8 @@ ContextT = TypeVar(
     bound=commands.Context[Any],
     default=commands.Context[Any],
 )
-
-
-ViewCheck: TypeAlias = Callable[[discord.Interaction, ContextT], Awaitable[bool]]
-
-
-class ViewButtons(TypedDict):
-    first: type[FirstPageButton]
-    previous: type[PreviousPageButton]
-    label: type[LabelButton]
-    next: type[NextPageButton]
-    last: type[LastPageButton]
-    stop: type[StopButton]
+ControllerT = TypeVar(
+    "ControllerT",
+    bound=Controller,
+    default=Controller,
+)

@@ -1,31 +1,33 @@
 from collections.abc import Sequence
 from typing import Any
 
-from .base import Paginator
+from .base import BasePaginator
+from .controller import Controller
 from .enums import CodeblockType, StopAction
-from .types import ContextT, InteractionCheck
+from .types import ContextT, ControllerT
 
 
 __all__ = ["TextPaginator"]
 
 
-class TextPaginator(Paginator):
+class TextPaginator(BasePaginator):
 
     def __init__(
         self,
         *,
+        # context
         ctx: ContextT,
-        timeout: int | None = 300,
-        interaction_check: InteractionCheck | None = None,
-        # entries
-        entries: Sequence[Any],
-        joiner: str = "\n",
         # pages
-        per_page: int,
+        items: Sequence[Any],
+        items_per_page: int,
+        join_items_with: str = "\n",
         initial_page: int = 0,
-        # actions
+        # controller
+        controller: type[ControllerT] = Controller,
+        controller_stop_button_action: StopAction = StopAction.REMOVE_VIEW,
+        # timeout
+        timeout: float = 300.0,
         timeout_action: StopAction = StopAction.DISABLE_VIEW,
-        stop_action: StopAction = StopAction.DISABLE_VIEW,
         # text paginator specific
         codeblock_type: CodeblockType = CodeblockType.NONE,
         codeblock_language: str | None = None,
@@ -34,14 +36,15 @@ class TextPaginator(Paginator):
     ) -> None:
         super().__init__(
             ctx=ctx,
-            timeout=timeout,
-            interaction_check=interaction_check,
-            entries=entries,
-            joiner=joiner,
-            per_page=per_page,
+            items=items,
+            items_per_page=items_per_page,
+            join_items=True,
+            join_items_with=join_items_with,
             initial_page=initial_page,
+            controller=controller,
+            controller_stop_button_action=controller_stop_button_action,
+            timeout=timeout,
             timeout_action=timeout_action,
-            stop_action=stop_action,
         )
         self.header: str = header or ""
         self.footer: str = footer or ""
@@ -56,5 +59,5 @@ class TextPaginator(Paginator):
                 self.codeblock_start = f"```{codeblock_language}\n"
                 self.codeblock_end = "\n```"
 
-    async def _update_page_content(self) -> None:
+    async def set_page_content(self) -> None:
         self.content = f"{self.codeblock_start}{self.header}{self.pages[self.page]}{self.footer}{self.codeblock_end}"
