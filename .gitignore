@@ -1,5 +1,7 @@
 # ide
 .idea/
+.devcontainer/
+.vscode/
 
 # python
 *.pyc
