@@ -4,9 +4,9 @@ from typing import TYPE_CHECKING
 
 import discord
 
-
 if TYPE_CHECKING:
-    from .base import BasePaginator
+    from .paginators.base import BasePaginator
+
 
 __all__ = ["Controller"]
 
