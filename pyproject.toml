@@ -4,10 +4,10 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name          = "discord-ext-paginators"
-version       = "0.1.0"
+version       = "0.2.0a0"
 description   = "A discord.py extension for my collection of paginators."
 license       = "MIT"
-authors       = ["Aaron Hennessey <axelancerr@gmail.com>"]
+authors       = ["Aaron Hennessey (Axelancerr) <axelancerr@gmail.com>"]
 readme        = "README.md"
 homepage      = "https://github.com/Axelancerr/discord-ext-paginators"
 repository    = "https://github.com/Axelancerr/discord-ext-paginators"

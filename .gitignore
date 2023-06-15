@@ -5,3 +5,6 @@
 
 # python
 *.pyc
+
+# poetry
+dist/
