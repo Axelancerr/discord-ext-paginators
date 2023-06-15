@@ -68,7 +68,10 @@ class BasePaginator(abc.ABC):
         self.view.set_button_states()
         await self.set_page_content()
         #
-        self.message = await self.ctx.reply(content=self.content, embeds=self.embeds, view=self.view)
+        self.message = await self.ctx.reply(
+            content=self.content, embeds=self.embeds,
+            view=self.view
+        )
 
     async def change_page(self, page: int) -> None:
         if self.message is None:
@@ -82,7 +85,10 @@ class BasePaginator(abc.ABC):
         await self.set_page_content()
         # edit message
         with contextlib.suppress(discord.NotFound, discord.HTTPException):
-            await self.message.edit(content=self.content, embeds=self.embeds, view=self.view)
+            await self.message.edit(
+                content=self.content, embeds=self.embeds,
+                view=self.view
+            )
 
     async def stop(self, by_timeout: bool = False) -> None:
         if self.message is None:

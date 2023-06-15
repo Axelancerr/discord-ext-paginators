@@ -28,7 +28,7 @@ async def remove_view(paginator: BasePaginator) -> None:
 
 async def edit_message(paginator: BasePaginator) -> None:
     assert paginator.message is not None
-    await paginator.message.edit(view=None, content="*paginator stopped*", embeds=[])
+    await paginator.message.edit(content="*paginator stopped*", embeds=[], view=None)
 
 
 async def delete_message(paginator: BasePaginator) -> None:
