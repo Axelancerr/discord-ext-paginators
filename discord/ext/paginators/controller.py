@@ -95,8 +95,10 @@ class Controller(discord.ui.View):
         await self.paginator.stop(by_timeout=True)
 
     def set_button_states(self) -> None:
-        self.buttons["first"].disabled = self.paginator.page <= 2
-        self.buttons["previous"].disabled = self.paginator.page <= 1
         self.buttons["label"].label = f"{self.paginator.page}/{len(self.paginator.pages)}"
-        self.buttons["next"].disabled = self.paginator.page >= len(self.paginator.pages)
-        self.buttons["last"].disabled = self.paginator.page >= len(self.paginator.pages) - 1
+        if "first" in self.buttons:
+            self.buttons["first"].disabled = self.paginator.page <= 2
+            self.buttons["last"].disabled = self.paginator.page >= len(self.paginator.pages) - 1
+        if "previous" in self.buttons:
+            self.buttons["previous"].disabled = self.paginator.page <= 1
+            self.buttons["next"].disabled = self.paginator.page >= len(self.paginator.pages)

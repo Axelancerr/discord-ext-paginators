@@ -11,6 +11,7 @@ from ..types import Callback, ContextT, ControllerT
 
 __all__ = ["PartialPaginator"]
 
+
 PartialT = TypeVar("PartialT")
 
 
@@ -19,12 +20,12 @@ class PartialPaginator(BasePaginator, Generic[PartialT]):
     def __init__(
         self,
         *,
-        # context
-        ctx: ContextT,
         # pages
         partials: Sequence[PartialT],
         # page
         initial_page: int = 1,
+        # context
+        ctx: ContextT,
         # settings
         controller: type[ControllerT] = Controller,
         timeout: float = 300.0,

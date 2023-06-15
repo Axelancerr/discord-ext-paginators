@@ -1,5 +1,5 @@
 from collections.abc import Awaitable, Callable
-from typing import Any, TypeAlias, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING, TypeAlias
 
 from discord.ext import commands
 from typing_extensions import TypeVar
@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 __all__ = [
     "ContextT",
     "ControllerT",
+    "Callback",
 ]
 
 
