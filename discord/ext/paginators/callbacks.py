@@ -15,8 +15,8 @@ __all__ = [
 
 
 async def disable_view(paginator: BasePaginator) -> None:
-    for button in paginator.view.buttons.values():
-        button.disabled = True
+    for item in paginator.view.items.values():
+        item.disabled = True
     assert paginator.message is not None
     await paginator.message.edit(view=paginator.view)
 

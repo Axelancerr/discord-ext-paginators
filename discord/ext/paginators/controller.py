@@ -8,53 +8,61 @@ if TYPE_CHECKING:
     from .paginators.base import BasePaginator
 
 
-__all__ = ["Controller"]
+__all__ = [
+    "ControllerButton",
+    "FirstPageButton",
+    "PreviousPageButton",
+    "LabelButton",
+    "NextPageButton",
+    "LastPageButton",
+    "StopButton",
+    "Controller",
+]
 
 
-class FirstPageButton(discord.ui.Button["Controller"]):
+class ControllerButton(discord.ui.Button["Controller"]):
 
     async def callback(self, interaction: discord.Interaction) -> None:
         # noinspection PyUnresolvedReferences
         await interaction.response.defer()
+
+
+class FirstPageButton(ControllerButton):
+
+    async def callback(self, interaction: discord.Interaction) -> None:
+        await super().callback(interaction)
         await self.view.paginator.go_to_first_page()  # pyright: ignore
 
 
-class PreviousPageButton(discord.ui.Button["Controller"]):
+class PreviousPageButton(ControllerButton):
 
     async def callback(self, interaction: discord.Interaction) -> None:
-        # noinspection PyUnresolvedReferences
-        await interaction.response.defer()
+        await super().callback(interaction)
         await self.view.paginator.go_to_previous_page()  # pyright: ignore
 
 
-class LabelButton(discord.ui.Button["Controller"]):
+class LabelButton(ControllerButton):
+    pass
+
+
+class NextPageButton(ControllerButton):
 
     async def callback(self, interaction: discord.Interaction) -> None:
-        # noinspection PyUnresolvedReferences
-        await interaction.response.defer()
-
-
-class NextPageButton(discord.ui.Button["Controller"]):
-
-    async def callback(self, interaction: discord.Interaction) -> None:
-        # noinspection PyUnresolvedReferences
-        await interaction.response.defer()
+        await super().callback(interaction)
         await self.view.paginator.go_to_next_page()  # pyright: ignore
 
 
-class LastPageButton(discord.ui.Button["Controller"]):
+class LastPageButton(ControllerButton):
 
     async def callback(self, interaction: discord.Interaction) -> None:
-        # noinspection PyUnresolvedReferences
-        await interaction.response.defer()
+        await super().callback(interaction)
         await self.view.paginator.go_to_last_page()  # pyright: ignore
 
 
-class StopButton(discord.ui.Button["Controller"]):
+class StopButton(ControllerButton):
 
     async def callback(self, interaction: discord.Interaction) -> None:
-        # noinspection PyUnresolvedReferences
-        await interaction.response.defer()
+        await super().callback(interaction)
         await self.view.paginator.stop()  # pyright: ignore
 
 
@@ -65,19 +73,19 @@ class Controller(discord.ui.View):
         self.paginator: BasePaginator = paginator
         match len(self.paginator.pages):
             case 1:
-                self.buttons = {
+                self.items = {
                     "label": LabelButton(label="?"),
                     "stop":  StopButton(emoji="\N{BLACK SQUARE FOR STOP}")
                 }
             case 2:
-                self.buttons = {
+                self.items = {
                     "previous": PreviousPageButton(emoji="\N{BLACK LEFT-POINTING TRIANGLE}"),
                     "label":    LabelButton(label="?"),
                     "next":     NextPageButton(emoji="\N{BLACK RIGHT-POINTING TRIANGLE}"),
                     "stop":     StopButton(emoji="\N{BLACK SQUARE FOR STOP}")
                 }
             case _:
-                self.buttons = {
+                self.items = {
                     "first":    FirstPageButton(emoji="\N{BLACK LEFT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}"),
                     "previous": PreviousPageButton(emoji="\N{BLACK LEFT-POINTING TRIANGLE}"),
                     "label":    LabelButton(label="?"),
@@ -85,8 +93,8 @@ class Controller(discord.ui.View):
                     "last":     LastPageButton(emoji="\N{BLACK RIGHT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}"),
                     "stop":     StopButton(emoji="\N{BLACK SQUARE FOR STOP}")
                 }
-        for button in self.buttons.values():
-            self.add_item(button)
+        for item in self.items.values():
+            self.add_item(item)
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         return interaction.user.id == self.paginator.ctx.author.id
@@ -95,10 +103,10 @@ class Controller(discord.ui.View):
         await self.paginator.stop(by_timeout=True)
 
     def set_button_states(self) -> None:
-        self.buttons["label"].label = f"{self.paginator.page}/{len(self.paginator.pages)}"
-        if "first" in self.buttons:
-            self.buttons["first"].disabled = self.paginator.page <= 2
-            self.buttons["last"].disabled = self.paginator.page >= len(self.paginator.pages) - 1
-        if "previous" in self.buttons:
-            self.buttons["previous"].disabled = self.paginator.page <= 1
-            self.buttons["next"].disabled = self.paginator.page >= len(self.paginator.pages)
+        self.items["label"].label = f"{self.paginator.page}/{len(self.paginator.pages)}"
+        if "first" in self.items:
+            self.items["first"].disabled = self.paginator.page <= 2
+            self.items["last"].disabled = self.paginator.page >= len(self.paginator.pages) - 1
+        if "previous" in self.items:
+            self.items["previous"].disabled = self.paginator.page <= 1
+            self.items["next"].disabled = self.paginator.page >= len(self.paginator.pages)
