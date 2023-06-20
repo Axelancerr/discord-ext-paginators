@@ -38,6 +38,7 @@ class BasePaginator(abc.ABC):
         # pages
         if items_per_page <= 0:
             raise ValueError("'items_per_page' must be greater than 0.")
+        self.items_per_page = items_per_page
         self.pages: Sequence[Any] = [
             join_items_with.join(items[x:x + items_per_page]) if join_items else items[x:x + items_per_page]
             for x in range(0, len(items), items_per_page)
