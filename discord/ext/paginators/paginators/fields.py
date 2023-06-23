@@ -4,14 +4,14 @@ import discord
 
 from .base import BasePaginator
 from ..callbacks import disable_view, remove_view
-from ..controller import Controller
-from ..types import Callback, ContextT, ControllerT
+from ..controllers import DefaultController
+from ..types import PaginatorStopCallback, ContextT, ControllerT
 
 
 __all__ = ["EmbedFieldsPaginator"]
 
 
-class EmbedFieldsPaginator(BasePaginator):
+class EmbedFieldsPaginator(BasePaginator[ContextT, ControllerT]):
 
     def __init__(
         self,
@@ -24,10 +24,10 @@ class EmbedFieldsPaginator(BasePaginator):
         # page
         initial_page: int = 1,
         # settings
-        controller: type[ControllerT] = Controller,
+        controller: type[ControllerT] = DefaultController,
         timeout: float = 300.0,
-        on_timeout: Callback = disable_view,
-        on_stop_button_press: Callback = remove_view,
+        on_timeout: PaginatorStopCallback = disable_view,
+        on_stop_button_press: PaginatorStopCallback = remove_view,
         # fields paginator specific
         embed: discord.Embed,
     ) -> None:
@@ -46,7 +46,7 @@ class EmbedFieldsPaginator(BasePaginator):
         )
         self.embeds = [embed]
 
-    async def set_page_content(self) -> None:
+    async def update_page_content(self) -> None:
         self.embeds[0].clear_fields()
         for name, value, inline in self.pages[self.page - 1]:
             self.embeds[0].add_field(name=name, value=value, inline=inline)

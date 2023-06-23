@@ -5,14 +5,14 @@ import discord
 from .base import BasePaginator
 from ..callbacks import disable_view, remove_view
 from ..codeblocks import CodeblockType, codeblock
-from ..controller import Controller
-from ..types import Callback, ContextT, ControllerT
+from ..controllers import DefaultController
+from ..types import PaginatorStopCallback, ContextT, ControllerT
 
 
 __all__ = ["EmbedTextPaginator"]
 
 
-class EmbedTextPaginator(BasePaginator):
+class EmbedTextPaginator(BasePaginator[ContextT, ControllerT]):
 
     def __init__(
         self,
@@ -26,10 +26,10 @@ class EmbedTextPaginator(BasePaginator):
         # page
         initial_page: int = 1,
         # settings
-        controller: type[ControllerT] = Controller,
+        controller: type[ControllerT] = DefaultController,
         timeout: float = 300.0,
-        on_timeout: Callback = disable_view,
-        on_stop_button_press: Callback = remove_view,
+        on_timeout: PaginatorStopCallback = disable_view,
+        on_stop_button_press: PaginatorStopCallback = remove_view,
         # text paginator
         codeblock_type: CodeblockType = CodeblockType.NONE,
         codeblock_language: str | None = None,
@@ -55,7 +55,7 @@ class EmbedTextPaginator(BasePaginator):
         self.codeblock_start, self.codeblock_end = codeblock(codeblock_type, language=codeblock_language)
         self.embeds = [embed]
 
-    async def set_page_content(self) -> None:
+    async def update_page_content(self) -> None:
         self.embeds[0].description = f"{self.codeblock_start}" \
                                      f"{self.header}\n" \
                                      f"{self.pages[self.page - 1]}" \

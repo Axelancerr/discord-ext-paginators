@@ -4,16 +4,16 @@ from typing import Any, TYPE_CHECKING, TypeAlias
 from discord.ext import commands
 from typing_extensions import TypeVar
 
-from .controller import Controller
-
 if TYPE_CHECKING:
-    from .paginators.base import BasePaginator
+    from .controllers import BaseController, DefaultController
+    from .paginators import BasePaginator
 
 
 __all__ = [
     "ContextT",
     "ControllerT",
-    "Callback",
+    "PaginatorT",
+    "PaginatorStopCallback",
 ]
 
 
@@ -21,11 +21,19 @@ ContextT = TypeVar(
     "ContextT",
     bound=commands.Context[Any],
     default=commands.Context[Any],
+    covariant=True,
 )
 ControllerT = TypeVar(
     "ControllerT",
-    bound=Controller,
-    default=Controller,
+    bound="BaseController",
+    default="DefaultController",
+    covariant=True,
+)
+PaginatorT = TypeVar(
+    "PaginatorT",
+    bound="BasePaginator",
+    default="BasePaginator",
+    covariant=True,
 )
 
-Callback: TypeAlias = Callable[["BasePaginator"], Awaitable[None]]
+PaginatorStopCallback: TypeAlias = Callable[[PaginatorT], Awaitable[None]]

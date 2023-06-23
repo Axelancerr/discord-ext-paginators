@@ -1,19 +1,19 @@
 import abc
 import contextlib
 from collections.abc import Sequence
-from typing import Any
+from typing import Any, Generic
 
 import discord
 
 from ..callbacks import disable_view, remove_view
-from ..controller import Controller
-from ..types import Callback, ContextT, ControllerT
+from ..controllers import DefaultController
+from ..types import ContextT, ControllerT, PaginatorStopCallback
 
 
 __all__ = ["BasePaginator"]
 
 
-class BasePaginator(abc.ABC):
+class BasePaginator(abc.ABC, Generic[ContextT, ControllerT]):
 
     def __init__(
         self,
@@ -28,10 +28,10 @@ class BasePaginator(abc.ABC):
         # page
         initial_page: int = 1,
         # settings
-        controller: type[ControllerT] = Controller,
+        controller: type[ControllerT] = DefaultController,
         timeout: float = 300.0,
-        on_timeout: Callback = disable_view,
-        on_stop_button_press: Callback = remove_view,
+        on_timeout: PaginatorStopCallback = disable_view,
+        on_stop_button_press: PaginatorStopCallback = remove_view,
     ) -> None:
         # context
         self.ctx: ContextT = ctx
@@ -50,8 +50,8 @@ class BasePaginator(abc.ABC):
         # settings
         self.controller: type[ControllerT] = controller
         self.timeout: float = timeout
-        self.on_timeout: Callback = on_timeout
-        self.on_stop_button_press: Callback = on_stop_button_press
+        self.on_timeout: PaginatorStopCallback = on_timeout
+        self.on_stop_button_press: PaginatorStopCallback = on_stop_button_press
 
         # message
         self.message: discord.Message | None = None
@@ -59,31 +59,31 @@ class BasePaginator(abc.ABC):
         self.content: str | None = None
         self.embeds: list[discord.Embed] = []
 
-    # methods
+    # base methods
 
     async def start(self) -> None:
         if self.message is not None:
             return
         #
         self.view = self.controller(self)
-        self.view.set_button_states()
-        await self.set_page_content()
+        self.view.update_item_states()
+        await self.update_page_content()
         #
         self.message = await self.ctx.reply(
             content=self.content, embeds=self.embeds,
             view=self.view
         )
 
-    async def change_page(self, page: int) -> None:
+    async def change_page(self, page: int, /) -> None:
         if self.message is None:
             return
         # check if page is valid
         if page <= 0 or page > len(self.pages):
             raise ValueError(f"'page' must be between 1 and {len(self.pages)} (inclusive).")
         self.page = page
-        # set new controller state + page contents
-        self.view.set_button_states()
-        await self.set_page_content()
+        # set new controllers state + page contents
+        self.view.update_item_states()
+        await self.update_page_content()
         # edit message
         with contextlib.suppress(discord.NotFound, discord.HTTPException):
             await self.message.edit(
@@ -91,20 +91,17 @@ class BasePaginator(abc.ABC):
                 view=self.view
             )
 
-    async def stop(self, by_timeout: bool = False) -> None:
+    async def stop(self, *, callback: PaginatorStopCallback) -> None:
         if self.message is None:
             return
         # enact stop actions
-        if by_timeout:
-            await self.on_timeout(self)
-        else:
-            await self.on_stop_button_press(self)
+        await callback(self)
         self.view.stop()
         # reset variables
         self.message = None
         self.view = discord.utils.MISSING
 
-    # shortcuts
+    # shortcut methods
 
     async def go_to_first_page(self) -> None:
         await self.change_page(1)
@@ -121,5 +118,5 @@ class BasePaginator(abc.ABC):
     # abc methods
 
     @abc.abstractmethod
-    async def set_page_content(self) -> None:
+    async def update_page_content(self) -> None:
         raise NotImplementedError

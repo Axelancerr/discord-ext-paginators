@@ -2,7 +2,7 @@ from typing import Literal, NamedTuple
 
 from .callbacks import *
 from .codeblocks import *
-from .controller import *
+from .controllers import *
 from .paginators import *
 from .types import *
 

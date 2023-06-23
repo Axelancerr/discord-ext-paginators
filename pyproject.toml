@@ -62,6 +62,3 @@ include                = ["discord/ext/paginators"]
 pythonVersion          = "3.11"
 typeCheckingMode       = "strict"
 useLibraryCodeForTypes = true
-reportPrivateUsage      = false
-reportUnknownMemberType = false
-reportImportCycles      = false
